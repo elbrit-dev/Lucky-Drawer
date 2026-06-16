@@ -7,3 +7,4 @@
 .env*.local
 /data/entries.json
 next-env.d.ts
+.netlify
