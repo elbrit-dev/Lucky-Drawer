@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
 import { LuckyDrawEntry, StoredEntry } from "@/lib/types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "entries.json");
+// Candidate storage dirs, tried in order. The project dir works locally; on a
+// read-only serverless host (e.g. Vercel) it falls back to the OS temp dir.
+const STORE_DIRS = [
+  path.join(process.cwd(), "data"),
+  path.join(os.tmpdir(), "elbrit-lucky-draw"),
+];
+const FILE = "entries.json";
 
 function isValid(b: Partial<LuckyDrawEntry>): b is LuckyDrawEntry {
   return (
@@ -19,12 +25,36 @@ function isValid(b: Partial<LuckyDrawEntry>): b is LuckyDrawEntry {
 }
 
 async function readEntries(): Promise<StoredEntry[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(raw) as StoredEntry[];
-  } catch {
-    return [];
+  for (const dir of STORE_DIRS) {
+    try {
+      const raw = await fs.readFile(path.join(dir, FILE), "utf-8");
+      return JSON.parse(raw) as StoredEntry[];
+    } catch {
+      // try next dir
+    }
   }
+  return [];
+}
+
+async function persist(stored: StoredEntry): Promise<boolean> {
+  for (const dir of STORE_DIRS) {
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      const file = path.join(dir, FILE);
+      let entries: StoredEntry[] = [];
+      try {
+        entries = JSON.parse(await fs.readFile(file, "utf-8")) as StoredEntry[];
+      } catch {
+        entries = [];
+      }
+      entries.push(stored);
+      await fs.writeFile(file, JSON.stringify(entries, null, 2), "utf-8");
+      return true;
+    } catch {
+      // try next dir
+    }
+  }
+  return false;
 }
 
 export async function POST(req: Request) {
@@ -45,19 +75,14 @@ export async function POST(req: Request) {
     submittedAt: new Date().toISOString(),
   };
 
-  // Local fallback store — keeps every entry in data/entries.json.
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    const entries = await readEntries();
-    entries.push(stored);
-    await fs.writeFile(DATA_FILE, JSON.stringify(entries, null, 2), "utf-8");
-  } catch (e) {
-    console.error("Failed to persist entry:", e);
-    return NextResponse.json({ ok: false, error: "Storage error" }, { status: 500 });
-  }
+  const persisted = await persist(stored);
+
+  // Always log the full entry so it is recoverable from the host's runtime logs
+  // even when durable storage isn't configured (serverless temp dir is ephemeral).
+  console.log("LUCKY_DRAW_ENTRY", JSON.stringify(stored));
 
   // ───────────────────────────────────────────────────────────────
-  // ERP HOOK — wire this up when ready. Example for ERPNext (Lead):
+  // ERP HOOK — wire this up for durable storage. Example for ERPNext (Lead):
   //
   //   await fetch(`${process.env.ERP_URL}/api/resource/Lead`, {
   //     method: "POST",
@@ -78,7 +103,8 @@ export async function POST(req: Request) {
   //   });
   // ───────────────────────────────────────────────────────────────
 
-  return NextResponse.json({ ok: true, id: stored.id });
+  // Entry never blocks on storage — validation passed, so the user is in the draw.
+  return NextResponse.json({ ok: true, id: stored.id, persisted });
 }
 
 export async function GET() {
