@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import { LuckyDrawEntry, StoredEntry } from "@/lib/types";
+import { sendToErpnext } from "@/lib/erpnext";
 
 // Candidate storage dirs, tried in order. The project dir works locally; on a
 // read-only serverless host (e.g. Vercel) it falls back to the OS temp dir.
@@ -81,30 +82,14 @@ export async function POST(req: Request) {
   // even when durable storage isn't configured (serverless temp dir is ephemeral).
   console.log("LUCKY_DRAW_ENTRY", JSON.stringify(stored));
 
-  // ───────────────────────────────────────────────────────────────
-  // ERP HOOK — wire this up for durable storage. Example for ERPNext (Lead):
-  //
-  //   await fetch(`${process.env.ERP_URL}/api/resource/Lead`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `token ${process.env.ERP_API_KEY}:${process.env.ERP_API_SECRET}`,
-  //     },
-  //     body: JSON.stringify({
-  //       lead_name: stored.name,
-  //       email_id: stored.email,
-  //       mobile_no: stored.phone,
-  //       company_name: stored.clinic,
-  //       city: stored.city,
-  //       custom_specialisation: stored.specialisation,
-  //       custom_lucky_number: stored.luckyNumber,
-  //       source: "Lucky Draw",
-  //     }),
-  //   });
-  // ───────────────────────────────────────────────────────────────
+  // Push into ERPNext (UAT) — the form_pro form's DocType. Non-blocking: a failed
+  // ERP write is logged but never stops the user completing their entry.
+  const erp = await sendToErpnext(stored);
+  if (!erp.ok && !erp.skipped) {
+    console.error("ERP_SUBMIT_FAILED", erp.detail);
+  }
 
-  // Entry never blocks on storage — validation passed, so the user is in the draw.
-  return NextResponse.json({ ok: true, id: stored.id, persisted });
+  return NextResponse.json({ ok: true, id: stored.id, persisted, erp: erp.ok });
 }
 
 export async function GET() {
