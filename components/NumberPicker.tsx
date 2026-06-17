@@ -28,7 +28,7 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
   const root = useRef<HTMLDivElement>(null);
 
   const n = parseInt(inp || "0", 10);
-  const valid = n >= 1 && n <= 100;
+  const valid = n >= 1 && n <= 99;
   const d = digitsFor(inp);
 
   let label = "enter or spin your lucky number";
@@ -40,7 +40,7 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
       label = `number ${n} · tap lock to confirm`;
       labelClass = "valid";
     } else {
-      label = n > 100 ? "max is 100 · press ⌫ to fix" : "enter a valid number 1–100";
+      label = n > 99 ? "max is 99 · press ⌫ to fix" : "enter a valid number 1–99";
       labelClass = "err";
     }
   }
@@ -72,7 +72,7 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
       if (prev.length >= 3) return prev;
       if (prev === "" && k === "0") return prev;
       const next = prev + k;
-      if (parseInt(next, 10) > 100) return prev;
+      if (parseInt(next, 10) > 99) return prev;
       changed = true;
       return next;
     });
@@ -99,7 +99,7 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
     setInp("");
     const elA = dA.current;
     const elB = dB.current;
-    const target = Math.floor(Math.random() * 100) + 1;
+    const target = Math.floor(Math.random() * 99) + 1;
     const ts = target.toString().padStart(2, "0");
     const D = "0123456789";
     let step = 0;
@@ -175,7 +175,8 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
         Pick your <span>lucky</span> number
       </h1>
       <p className="sub pick-anim">
-        Choose a number between 1 and 100. The most unique pick of all wins the grand prize!
+        Choose a number between 1 and 99. The most unique pick of all wins the{" "}
+        <b>Grand Prize</b> 🎁
       </p>
 
       <div className="ndisplay pick-anim">

@@ -23,7 +23,7 @@ function isValid(b: Partial<LuckyDrawEntry>): b is LuckyDrawEntry {
     typeof b.specialisation === "string" && b.specialisation.length > 0 &&
     typeof b.city === "string" && b.city.trim().length > 1 &&
     typeof b.clinic === "string" && b.clinic.trim().length > 1 &&
-    typeof b.luckyNumber === "number" && b.luckyNumber >= 1 && b.luckyNumber <= 100
+    typeof b.luckyNumber === "number" && b.luckyNumber >= 1 && b.luckyNumber <= 99
   );
 }
 
