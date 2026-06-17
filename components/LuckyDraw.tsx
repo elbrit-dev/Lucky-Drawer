@@ -50,7 +50,13 @@ export default function LuckyDraw() {
       </section>
 
       <section className="scr" ref={(el) => { screens.current[1] = el; }}>
-        {screen >= 1 && <WizardForm luckyNumber={luckyNumber} onSuccess={handleSuccess} />}
+        {screen >= 1 && (
+          <WizardForm
+            luckyNumber={luckyNumber}
+            onSuccess={handleSuccess}
+            onBack={() => setScreen(0)}
+          />
+        )}
       </section>
 
       <section className="scr" ref={(el) => { screens.current[2] = el; }}>

@@ -16,7 +16,8 @@ const FILE = "entries.json";
 function isValid(b: Partial<LuckyDrawEntry>): b is LuckyDrawEntry {
   return (
     typeof b.name === "string" && b.name.trim().length > 1 &&
-    typeof b.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email) &&
+    // email is optional: accept blank, but reject a malformed address if provided
+    typeof b.email === "string" && (b.email.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email.trim())) &&
     typeof b.phone === "string" && b.phone.replace(/\D/g, "").length >= 10 &&
     typeof b.specialisation === "string" && b.specialisation.length > 0 &&
     typeof b.city === "string" && b.city.trim().length > 1 &&

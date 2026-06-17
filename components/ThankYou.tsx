@@ -4,22 +4,12 @@ import { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import ElbritLogo from "./ElbritLogo";
+import { fireConfetti } from "@/lib/confetti";
 import { LuckyDrawEntry } from "@/lib/types";
 
 interface ThankYouProps {
   data: LuckyDrawEntry;
 }
-
-const CONFETTI_COLORS = [
-  "#E1251B",
-  "#FFD700",
-  "#ffffff",
-  "#1E2A5E",
-  "#FF6666",
-  "#FFE066",
-  "#ff9999",
-  "#c0c0c0",
-];
 
 function firstName(full: string) {
   const parts = full.split(" ").filter((p) => !/^dr\.?$/i.test(p));
@@ -41,31 +31,7 @@ export default function ThankYou({ data }: ThankYouProps) {
         ease: "power2.out",
       });
 
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const sx = w * 0.5;
-      const sy = h * 0.26;
-      for (let i = 0; i < 80; i++) {
-        const el = document.createElement("div");
-        const sz = 5 + Math.random() * 7;
-        el.style.cssText = `position:fixed;z-index:999;pointer-events:none;width:${sz}px;height:${sz}px;background:${
-          CONFETTI_COLORS[i % CONFETTI_COLORS.length]
-        };border-radius:${i % 4 === 0 ? "50%" : "3px"};`;
-        root.current?.appendChild(el);
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 70 + Math.random() * 230;
-        gsap.set(el, { x: sx, y: sy, opacity: 1, rotation: Math.random() * 360, scale: 0.3 + Math.random() * 0.9 });
-        gsap.to(el, {
-          x: sx + Math.cos(angle) * dist,
-          y: sy + Math.sin(angle) * dist + h * 0.3,
-          rotation: Math.random() * 720 - 360,
-          opacity: 0,
-          duration: 0.9 + Math.random() * 0.9,
-          delay: Math.random() * 0.4,
-          ease: "power2.out",
-          onComplete: () => el.remove(),
-        });
-      }
+      fireConfetti(window.innerWidth * 0.5, window.innerHeight * 0.26, 80);
     },
     { scope: root }
   );

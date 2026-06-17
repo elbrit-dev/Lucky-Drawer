@@ -499,3 +499,22 @@ h1 span { color: var(--red); }
 .tc-lb { color: rgba(255, 255, 255, 0.3); }
 .tc-vl { color: #fff; font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
 .ty-footer { font-size: 11px; color: rgba(255, 255, 255, 0.18); letter-spacing: 0.05em; }
+
+/* ─── Compact layout for short / small viewports ───────── */
+/* Keeps the "Lock in my number" button above the fold on phones so the
+   picker doesn't need scrolling. */
+@media (max-height: 740px), (max-width: 400px) {
+  .logo-row { padding-top: max(env(safe-area-inset-top, 0px), 14px); }
+  h1 { font-size: 23px; margin: 10px 0 6px; }
+  .sub { font-size: 12px; margin-bottom: 12px; line-height: 1.5; }
+  .ndisplay { margin: 2px 0 6px; gap: 8px; }
+  .dslot, .dface { width: 62px; height: 76px; }
+  .dface { border-radius: 14px; }
+  .slot-label { font-size: 8px; }
+  .nlabel { margin-bottom: 10px; }
+  .kpad { max-width: 282px; padding: 12px; border-radius: 20px; }
+  .kgrid { gap: 8px; }
+  .k { height: 50px; border-radius: 12px; }
+  .kn { font-size: 20px; }
+  .btn-primary { margin-top: 12px; padding: 15px; }
+}

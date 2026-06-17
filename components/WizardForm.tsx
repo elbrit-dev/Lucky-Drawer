@@ -9,6 +9,8 @@ import { LuckyDrawEntry, SPECIALISATIONS } from "@/lib/types";
 interface WizardFormProps {
   luckyNumber: number;
   onSuccess: (data: LuckyDrawEntry) => void;
+  /** Called when the user backs out of the first step (returns to the picker). */
+  onBack: () => void;
 }
 
 type Field = "name" | "email" | "phone" | "specialisation" | "city" | "clinic";
@@ -44,12 +46,13 @@ const FIELDS: Record<Field, FieldDef> = {
   },
   email: {
     key: "email",
-    label: "Email address",
+    label: "Email address (optional)",
     type: "email",
     placeholder: "you@clinic.com",
     autoComplete: "email",
     inputMode: "email",
-    validate: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+    // optional: blank is fine, but if filled in it must be a valid address
+    validate: (v) => v.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
     error: "Please enter a valid email",
   },
   phone: {
@@ -97,7 +100,7 @@ const EMPTY: LuckyDrawEntry = {
   luckyNumber: 0,
 };
 
-export default function WizardForm({ luckyNumber, onSuccess }: WizardFormProps) {
+export default function WizardForm({ luckyNumber, onSuccess, onBack }: WizardFormProps) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<LuckyDrawEntry>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<Field, boolean>>>({});
@@ -158,6 +161,10 @@ export default function WizardForm({ luckyNumber, onSuccess }: WizardFormProps) 
   }
 
   function back() {
+    if (step === 0) {
+      onBack();
+      return;
+    }
     dir.current = -1;
     setStep((s) => Math.max(0, s - 1));
   }
@@ -253,11 +260,9 @@ export default function WizardForm({ luckyNumber, onSuccess }: WizardFormProps) 
       {serverError && <p className="server-error">{serverError}</p>}
 
       <div className="wiz-nav">
-        {step > 0 && (
-          <button className="btn-ghost" onClick={back} type="button" disabled={submitting}>
-            &larr; Back
-          </button>
-        )}
+        <button className="btn-ghost" onClick={back} type="button" disabled={submitting}>
+          &larr; Back
+        </button>
         {!isLast ? (
           <button className="btn-primary on grow" onClick={next} type="button">
             Continue &rarr;

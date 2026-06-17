@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import ElbritLogo from "./ElbritLogo";
+import { fireConfetti } from "@/lib/confetti";
 
 interface NumberPickerProps {
   onLock: (n: number) => void;
@@ -80,6 +81,17 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
         { scale: 1.2, rotationX: -15 },
         { scale: 1, rotationX: 0, duration: 0.22, ease: "back.out(2.5)" }
       );
+  }
+
+  function lock() {
+    if (!valid || spinning) return;
+    // burst from the number-display so the celebration starts where the eye is
+    const rect = dB.current?.getBoundingClientRect();
+    const ox = rect ? rect.left + rect.width / 2 : undefined;
+    const oy = rect ? rect.top + rect.height / 2 : undefined;
+    fireConfetti(ox, oy);
+    // let the burst register before sliding to the form
+    setTimeout(() => onLock(n), 280);
   }
 
   function spin() {
@@ -209,7 +221,7 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
 
       <button
         className={`btn-primary pick-anim ${valid && !spinning ? "on" : "off"}`}
-        onClick={() => valid && !spinning && onLock(n)}
+        onClick={lock}
         type="button"
       >
         Lock in my number &rarr;
