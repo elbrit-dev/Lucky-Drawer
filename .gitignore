@@ -8,3 +8,4 @@
 /data/entries.json
 next-env.d.ts
 .netlify
+*.tsbuildinfo
