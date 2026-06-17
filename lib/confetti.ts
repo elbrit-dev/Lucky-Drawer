@@ -12,48 +12,69 @@ const CONFETTI_COLORS = [
 ];
 
 /**
- * Fires a one-shot confetti burst from a screen point. Particles are appended
- * to <body> (position:fixed) so the burst plays over whatever screen is on top,
- * including during a screen transition. Self-cleaning — each particle removes
- * itself when its tween finishes.
+ * Full-page confetti rain. Particles are spread across the entire width and
+ * staggered above (and partway down) the viewport, then flutter down past the
+ * bottom — so the whole page fills with confetti rather than bursting from a
+ * single point. Appended to <body> (position:fixed) so it plays over whatever
+ * screen is on top, including during a transition. Self-cleaning.
  *
- * @param originX  burst origin X in px (defaults to horizontal centre)
- * @param originY  burst origin Y in px (defaults to ~30% down the viewport)
- * @param count    number of particles
+ * @param count number of particles
  */
-export function fireConfetti(originX?: number, originY?: number, count = 90) {
+export function fireConfetti(count = 150) {
   if (typeof window === "undefined") return;
   const w = window.innerWidth;
   const h = window.innerHeight;
-  const sx = originX ?? w * 0.5;
-  const sy = originY ?? h * 0.3;
 
   for (let i = 0; i < count; i++) {
     const el = document.createElement("div");
-    const sz = 5 + Math.random() * 7;
-    el.style.cssText = `position:fixed;top:0;left:0;z-index:9999;pointer-events:none;width:${sz}px;height:${sz}px;background:${
-      CONFETTI_COLORS[i % CONFETTI_COLORS.length]
-    };border-radius:${i % 4 === 0 ? "50%" : "3px"};`;
+    const round = i % 4 === 0;
+    const sz = 6 + Math.random() * 8;
+    el.style.cssText = `position:fixed;top:0;left:0;z-index:9999;pointer-events:none;will-change:transform;width:${sz}px;height:${
+      round ? sz : sz * 0.55
+    }px;background:${CONFETTI_COLORS[i % CONFETTI_COLORS.length]};border-radius:${
+      round ? "50%" : "2px"
+    };`;
     document.body.appendChild(el);
 
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 70 + Math.random() * 240;
+    // spread across the full width; start above the fold, fanned out vertically
+    // so the page is filled from top to bottom almost immediately
+    const startX = Math.random() * w;
+    const startY = -0.1 * h - Math.random() * h * 0.55;
+    const flutter = 24 + Math.random() * 46;
+    const fall = 2.2 + Math.random() * 1.9;
+    const delay = Math.random() * 0.5;
+
     gsap.set(el, {
-      x: sx,
-      y: sy,
+      x: startX,
+      y: startY,
       opacity: 1,
       rotation: Math.random() * 360,
-      scale: 0.3 + Math.random() * 0.9,
+      scale: 0.5 + Math.random() * 0.9,
     });
+    // vertical fall + spin owns y/rotation and cleans the particle up
     gsap.to(el, {
-      x: sx + Math.cos(angle) * dist,
-      y: sy + Math.sin(angle) * dist + h * 0.32,
-      rotation: Math.random() * 720 - 360,
-      opacity: 0,
-      duration: 0.9 + Math.random() * 0.9,
-      delay: Math.random() * 0.35,
-      ease: "power2.out",
+      y: h + 60,
+      rotation: `+=${Math.random() * 760 - 380}`,
+      duration: fall,
+      delay,
+      ease: "none",
       onComplete: () => el.remove(),
+    });
+    // sole owner of x: gentle side-to-side flutter as it drifts down
+    gsap.to(el, {
+      x: startX + flutter,
+      duration: 0.6 + Math.random() * 0.5,
+      delay,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+    });
+    // fade out near the end of the fall
+    gsap.to(el, {
+      opacity: 0,
+      duration: 0.7,
+      delay: delay + fall - 0.7,
+      ease: "power1.in",
     });
   }
 }

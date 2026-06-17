@@ -85,12 +85,9 @@ export default function NumberPicker({ onLock }: NumberPickerProps) {
 
   function lock() {
     if (!valid || spinning) return;
-    // burst from the number-display so the celebration starts where the eye is
-    const rect = dB.current?.getBoundingClientRect();
-    const ox = rect ? rect.left + rect.width / 2 : undefined;
-    const oy = rect ? rect.top + rect.height / 2 : undefined;
-    fireConfetti(ox, oy);
-    // let the burst register before sliding to the form
+    // full-page confetti rain to celebrate the pick
+    fireConfetti();
+    // let the confetti start raining before sliding to the form
     setTimeout(() => onLock(n), 280);
   }
 

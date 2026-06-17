@@ -31,7 +31,7 @@ export default function ThankYou({ data }: ThankYouProps) {
         ease: "power2.out",
       });
 
-      fireConfetti(window.innerWidth * 0.5, window.innerHeight * 0.26, 80);
+      fireConfetti();
     },
     { scope: root }
   );
